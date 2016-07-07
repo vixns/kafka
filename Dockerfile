@@ -8,4 +8,4 @@ rm -rf /src /root/.gradle
 
 WORKDIR /opt/kafka-mesos
 EXPOSE 7000
-ENTRYPOINT ["java", "-jar", "/opt/kafka-mesos/kafka-mesos.jar", "scheduler"]
+ENTRYPOINT ["java", "-jar", "/opt/kafka-mesos/kafka-mesos-0.9.5.1.jar", "scheduler"]
