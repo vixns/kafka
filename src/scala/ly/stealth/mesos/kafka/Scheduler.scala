@@ -71,7 +71,6 @@ object Scheduler extends org.apache.mesos.Scheduler {
       .setExecutorId(ExecutorID.newBuilder.setValue(Broker.nextExecutorId(broker)))
       .setCommand(commandBuilder)
       .setName("broker-" + broker.id)
-      .setLabels(Labels.newBuilder().addLabels(Label.newBuilder().setKey("overrideTaskName").setValue("kafka")))
       .build()
   }
 
@@ -101,6 +100,7 @@ object Scheduler extends org.apache.mesos.Scheduler {
 
     val taskBuilder: TaskInfo.Builder = TaskInfo.newBuilder
       .setName(Config.frameworkName + "-" + broker.id)
+      .setLabels(Labels.newBuilder.addLabels(Label.newBuilder().setKey("overrideTaskName").setValue(Config.frameworkName)).build)
       .setTaskId(TaskID.newBuilder.setValue(Broker.nextTaskId(broker)).build)
       .setSlaveId(offer.getSlaveId)
       .setData(taskData)
