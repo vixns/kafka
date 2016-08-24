@@ -18,14 +18,15 @@
 package ly.stealth.mesos.kafka
 
 import java.util
+
 import scala.util.parsing.json.{JSONArray, JSONObject}
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import java.util.Collections
-import java.io.{FileWriter, File}
-import org.I0Itec.zkclient.ZkClient
-import kafka.utils.ZKStringSerializer
+import java.io.{File, FileWriter}
+
+import kafka.utils.ZkUtils
 import org.I0Itec.zkclient.exception.ZkNodeExistsException
 import net.elodina.mesos.util.Version
 
@@ -33,7 +34,7 @@ class Cluster {
   private val brokers: util.List[Broker] = new util.concurrent.CopyOnWriteArrayList[Broker]()
   private[kafka] var rebalancer: Rebalancer = new Rebalancer()
   private[kafka] var topics: Topics = new Topics()
-  private[kafka] var frameworkId: String = null
+  private[kafka] var frameworkId: String = _
 
   def getBrokers:util.List[Broker] = Collections.unmodifiableList(brokers)
 
@@ -75,11 +76,11 @@ class Cluster {
       val brokerNodes = new ListBuffer[JSONObject]()
       for (broker <- brokers)
         brokerNodes.add(broker.toJson(false))
-      obj("brokers") = new JSONArray(brokerNodes.toList)
+      obj("brokers") = JSONArray(brokerNodes.toList)
     }
 
     if (frameworkId != null) obj("frameworkId") = frameworkId
-    new JSONObject(obj.toMap)
+    JSONObject(obj.toMap)
   }
 }
 
@@ -135,16 +136,15 @@ object Cluster {
 
   class ZkStorage(val path: String) extends Storage {
     createChrootIfRequired()
-    val zkClient = new ZkClient(Config.zk, 30000, 30000, ZKStringSerializer)
+    val zkClient = ZkUtils.createZkClient(Config.zk, 30000, 30000)
 
     private def createChrootIfRequired(): Unit = {
       val slashIdx: Int = Config.zk.indexOf('/')
       if (slashIdx == -1) return
 
       val chroot = Config.zk.substring(slashIdx)
-      val zkConnect = Config.zk.substring(0, slashIdx)
 
-      val client = new ZkClient(zkConnect, 30000, 30000, ZKStringSerializer)
+      val client = ZkUtils.createZkClient(Config.zk, 30000, 30000)
       try { client.createPersistent(chroot, true) }
       finally { client.close() }
     }

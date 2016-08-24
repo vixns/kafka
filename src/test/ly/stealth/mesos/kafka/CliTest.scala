@@ -21,16 +21,18 @@ import org.apache.mesos.Protos.TaskState
 import org.junit.{After, Before, Test}
 import org.junit.Assert._
 import java.util
+
 import scala.collection.JavaConversions._
 import java.io.{ByteArrayOutputStream, PrintStream}
-import net.elodina.mesos.util.{Strings, Period}
+
+import net.elodina.mesos.util.{Period, Strings}
 
 class CliTest extends KafkaMesosTestCase {
   val out: ByteArrayOutputStream = new ByteArrayOutputStream()
 
   @Before
-  override def before {
-    super.before
+  override def before() {
+    super.before()
 
     startHttpServer()
     Cli.api = Config.api
@@ -40,15 +42,15 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @After
-  override def after {
+  override def after() {
     Cli.out = System.out
     stopHttpServer()
-    super.after
+    super.after()
     stopZkServer()
   }
 
   @Test
-  def help {
+  def help() {
     exec("help")
     assertOutContains("Usage:")
     assertOutContains("scheduler")
@@ -63,7 +65,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_list{
+  def broker_list() {
     Scheduler.cluster.addBroker(new Broker("0"))
     Scheduler.cluster.addBroker(new Broker("1"))
     Scheduler.cluster.addBroker(new Broker("2"))
@@ -82,11 +84,11 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_add {
+  def broker_add() {
     exec("broker add 0 --cpus=0.1 --mem=128")
     assertOutContains("broker added:")
     assertOutContains("id: 0")
-    assertOutContains("cpus:0.10, mem:128")
+    assertOutContains("10, mem:128")
 
     assertEquals(1, Scheduler.cluster.getBrokers.size())
     val broker = Scheduler.cluster.getBroker("0")
@@ -95,7 +97,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_update {
+  def broker_update() {
     val broker = Scheduler.cluster.addBroker(new Broker("0"))
 
     exec("broker update 0 --failover-delay=10s --failover-max-delay=20s --options=log.dirs=/tmp/kafka-logs")
@@ -109,7 +111,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_remove {
+  def broker_remove() {
     Scheduler.cluster.addBroker(new Broker("0"))
     exec("broker remove 0")
 
@@ -118,7 +120,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_start_stop {
+  def broker_start_stop() {
     val broker0 = Scheduler.cluster.addBroker(new Broker("0"))
     val broker1 = Scheduler.cluster.addBroker(new Broker("1"))
 
@@ -143,7 +145,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_start_stop_timeout {
+  def broker_start_stop_timeout() {
     val broker = Scheduler.cluster.addBroker(new Broker("0"))
     try { exec("broker start 0 --timeout=1ms"); fail() }
     catch { case e: Cli.Error => assertTrue(e.getMessage, e.getMessage.contains("broker start timeout")) }
@@ -156,7 +158,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_clone: Unit = {
+  def broker_clone() : Unit = {
     val broker = new Broker("0")
     broker.cpus = 5
     broker.options = Map("test" -> "abc")
@@ -170,7 +172,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 60000)
-  def broker_log: Unit = {
+  def broker_log() : Unit = {
     // no broker
     assertCliErrorContains("broker log 0", "broker 0 not found")
 
@@ -232,7 +234,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_restart: Unit = {
+  def broker_restart() : Unit = {
     exec("help broker")
     assertOutContains("restart    - restart broker")
 
@@ -280,7 +282,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_list {
+  def topic_list() {
     exec("topic list")
     assertOutContains("no topics")
 
@@ -303,7 +305,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_add {
+  def topic_add() {
     exec("topic add t0")
     assertOutContains("topic added:")
     assertOutContains("name: t0")
@@ -321,7 +323,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_update {
+  def topic_update() {
     Scheduler.cluster.topics.addTopic("t0")
     exec("topic update t0 --options=flush.ms=5000")
     assertOutContains("topic updated:")
@@ -334,7 +336,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_rebalance {
+  def topic_rebalance() {
     val cluster: Cluster = Scheduler.cluster
     val rebalancer: Rebalancer = cluster.rebalancer
 
@@ -349,7 +351,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def usage_errors {
+  def usage_errors() {
     // no command
     try { exec(""); fail() }
     catch { case e: Cli.Error => assertTrue(e.getMessage, e.getMessage.contains("command required")) }
@@ -364,7 +366,7 @@ class CliTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def connection_refused {
+  def connection_refused() {
     HttpServer.stop()
     try {
       try { exec("broker add 0"); fail()  }

@@ -34,16 +34,16 @@ import scala.util.parsing.json.JSONArray
 import scala.util.parsing.json.JSONObject
 
 object HttpServer {
-  var jar: File = null
-  var kafkaDist: File = null
-  var kafkaVersion: Version = null
+  var jar: File = _
+  var kafkaDist: File = _
+  var kafkaVersion: Version = _
 
   val logger = Logger.getLogger(HttpServer.getClass)
-  var server: Server = null
+  var server: Server = _
 
   def start(resolveDeps: Boolean = true) {
     if (server != null) throw new IllegalStateException("started")
-    if (resolveDeps) this.resolveDeps
+    if (resolveDeps) this.resolveDeps()
 
     val threadPool = new QueuedThreadPool(Runtime.getRuntime.availableProcessors() * 16)
     threadPool.setName("Jetty")
@@ -82,7 +82,7 @@ object HttpServer {
     Logger.getLogger("Jetty").setLevel(Level.WARN)
   }
 
-  private def resolveDeps: Unit = {
+  private def resolveDeps(): Unit = {
     val jarMask: String = "kafka-mesos.*\\.jar"
     val kafkaMask: String = "kafka.*\\.tgz"
 
@@ -176,7 +176,7 @@ object HttpServer {
         if (broker != null) brokerNodes.add(cluster.getBroker(id).toJson())
       }
 
-      response.getWriter.println("" + new JSONObject(Map("brokers" -> new JSONArray(brokerNodes.toList))))
+      response.getWriter.println("" + JSONObject(Map("brokers" -> JSONArray(brokerNodes.toList))))
     }
 
     def handleAddUpdateBroker(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -306,7 +306,7 @@ object HttpServer {
       val brokerNodes = new ListBuffer[JSONObject]()
       for (broker <- brokers) brokerNodes.add(broker.toJson())
 
-      response.getWriter.println("" + new JSONObject(Map("brokers" -> new JSONArray(brokerNodes.toList))))
+      response.getWriter.println("" + JSONObject(Map("brokers" -> JSONArray(brokerNodes.toList))))
     }
 
     def handleRemoveBroker(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -383,7 +383,7 @@ object HttpServer {
       val brokerNodes = new ListBuffer[JSONObject]()
 
       for (broker <- brokers) brokerNodes.add(broker.toJson())
-      response.getWriter.println(JSONObject(Map("status" -> status, "brokers" -> new JSONArray(brokerNodes.toList))))
+      response.getWriter.println(JSONObject(Map("status" -> status, "brokers" -> JSONArray(brokerNodes.toList))))
     }
 
     def handleRestartBroker(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -410,7 +410,7 @@ object HttpServer {
       }
 
       def timeoutJson(broker: Broker, stage: String): JSONObject =
-        new JSONObject(Map("status" -> "timeout", "message" -> s"broker ${broker.id} timeout on $stage"))
+        JSONObject(Map("status" -> "timeout", "message" -> s"broker ${broker.id} timeout on $stage"))
 
       for (broker <- brokers) {
         if (!broker.active || broker.task == null || !broker.task.running) { response.sendError(400, s"broker ${broker.id} is not running"); return }
@@ -432,7 +432,7 @@ object HttpServer {
         if (!broker.waitFor(State.RUNNING, startTimeout)) { response.getWriter.println("" + timeoutJson(broker, "start")); return }
       }
 
-      response.getWriter.println(JSONObject(Map("status" -> "restarted", "brokers" -> new JSONArray(brokers.map(_.toJson()).toList))))
+      response.getWriter.println(JSONObject(Map("status" -> "restarted", "brokers" -> JSONArray(brokers.map(_.toJson()).toList))))
     }
 
     def handleBrokerLog(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -510,7 +510,7 @@ object HttpServer {
       }
       cluster.save()
 
-      response.getWriter.println("" + new JSONObject(Map("brokers" -> new JSONArray(brokerNodes.toList))))
+      response.getWriter.println("" + JSONObject(Map("brokers" -> JSONArray(brokerNodes.toList))))
     }
 
     def handleTopicApi(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -537,7 +537,7 @@ object HttpServer {
         if (names.contains(topic.name))
           topicNodes.add(topic.toJson)
 
-      response.getWriter.println("" + new JSONObject(Map("topics" -> new JSONArray(topicNodes.toList))))
+      response.getWriter.println("" + JSONObject(Map("topics" -> JSONArray(topicNodes.toList))))
     }
 
     def handleAddUpdateTopic(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -591,7 +591,7 @@ object HttpServer {
         topicNodes.add(topics.getTopic(name).toJson)
       }
 
-      response.getWriter.println(JSONObject(Map("topics" -> new JSONArray(topicNodes.toList))))
+      response.getWriter.println(JSONObject(Map("topics" -> JSONArray(topicNodes.toList))))
     }
 
     def handleTopicRebalance(request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -672,9 +672,9 @@ object HttpServer {
 
       val topicsAndPartitions = Scheduler.cluster.topics.getPartitions(topics)
       response.getWriter.println(
-        new JSONObject(
+        JSONObject(
           topicsAndPartitions.mapValues(
-            v => new JSONArray(v.map(_.toJson).toList)
+            v => JSONArray(v.map(_.toJson).toList)
           ).toMap
         )
       )
@@ -707,7 +707,7 @@ object HttpServer {
 
       if (request.getAttribute("jsonResponse") != null) {
         response.setContentType("application/json; charset=utf-8")
-        writer.println("" + new JSONObject(Map("code" -> code, "error" -> error)))
+        writer.println("" + JSONObject(Map("code" -> code, "error" -> error)))
       } else {
         response.setContentType("text/plain; charset=utf-8")
         writer.println(code + " - " + error)

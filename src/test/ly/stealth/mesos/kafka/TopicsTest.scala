@@ -4,26 +4,27 @@ import org.junit.{After, Before, Test}
 import org.junit.Assert._
 import ly.stealth.mesos.kafka.Topics.Topic
 import java.util
-import net.elodina.mesos.util.Strings.{parseMap, formatMap}
+
+import net.elodina.mesos.util.Strings.{formatMap, parseMap}
 
 class TopicsTest extends KafkaMesosTestCase {
-  var topics: Topics = null
+  var topics: Topics = _
 
   @Before
-  override def before {
-    super.before
-    startZkServer()
+  override def before() {
+    super.before()
     topics = Scheduler.cluster.topics
+    startZkServer()
   }
 
   @After
-  override def after {
-    super.after
+  override def after() {
+    super.after()
     stopZkServer()
   }
 
   @Test
-  def getTopic {
+  def get_topic() {
     assertNull(topics.getTopic("t"))
 
     topics.addTopic("t")
@@ -31,7 +32,7 @@ class TopicsTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def getTopics {
+  def get_topics() {
     assertEquals(0, topics.getTopics.size)
 
     topics.addTopic("t0")
@@ -40,7 +41,7 @@ class TopicsTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def fairAssignment {
+  def fairAssignment() {
     val assignment: util.Map[Int, util.List[Int]] = topics.fairAssignment(3, 2, util.Arrays.asList(0, 1, 2))
     assertEquals(3, assignment.size())
     assertEquals(util.Arrays.asList(0, 1), assignment.get(0))
@@ -49,7 +50,7 @@ class TopicsTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def addTopic {
+  def addTopic() {
     topics.addTopic("t0", topics.fairAssignment(2, 1), options = parseMap("flush.ms=1000"))
     topics.addTopic("t1")
 
@@ -66,7 +67,7 @@ class TopicsTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def updateTopic {
+  def updateTopic() {
     var t: Topic = topics.addTopic("t")
     topics.updateTopic(t, parseMap("flush.ms=1000"))
 
@@ -75,7 +76,7 @@ class TopicsTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def validateOptions {
+  def validateOptions() {
     assertNull(topics.validateOptions(parseMap("flush.ms=1000")))
     assertNotNull(topics.validateOptions(parseMap("invalid=1000")))
   }

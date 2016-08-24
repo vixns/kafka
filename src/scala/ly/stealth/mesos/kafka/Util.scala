@@ -39,7 +39,7 @@ object Util {
 
   def parseJson(json: String): Map[String, Object] = {
     jsonLock synchronized {
-      val node: Map[String, Object] = JSON.parseFull(json).getOrElse(null).asInstanceOf[Map[String, Object]]
+      val node: Map[String, Object] = JSON.parseFull(json).orNull.asInstanceOf[Map[String, Object]]
       if (node == null) throw new IllegalArgumentException("Failed to parse json: " + json)
       node
     }
@@ -67,14 +67,14 @@ object Util {
   }
 
   class BindAddress(s: String) {
-    private var _source: String = null
-    private var _value: String = null
+    private var _source: String = _
+    private var _value: String = _
     
     def source: String = _source
     def value: String = _value
 
-    parse
-    def parse {
+    parse()
+    def parse() {
       val idx = s.indexOf(":")
       if (idx != -1) {
         _source = s.substring(0, idx)
@@ -99,7 +99,7 @@ object Util {
       val prefix = addressOrMask.substring(0, addressOrMask.length - 1)
       
       for (ni <- NetworkInterface.getNetworkInterfaces) {
-        val address = ni.getInetAddresses.find(_.getHostAddress.startsWith(prefix)).getOrElse(null)
+        val address = ni.getInetAddresses.find(_.getHostAddress.startsWith(prefix)).orNull
         if (address != null) return address.getHostAddress
       }
 
@@ -107,11 +107,11 @@ object Util {
     }
 
     def resolveInterfaceAddress(name: String): String = {
-      val ni = NetworkInterface.getNetworkInterfaces.find(_.getName == name).getOrElse(null)
+      val ni = NetworkInterface.getNetworkInterfaces.find(_.getName == name).orNull
       if (ni == null) throw new IllegalStateException("Failed to resolve " + s)
 
       val addresses: util.Enumeration[InetAddress] = ni.getInetAddresses
-      val address = addresses.find(_.isInstanceOf[Inet4Address]).getOrElse(null)
+      val address = addresses.find(_.isInstanceOf[Inet4Address]).orNull
       if (address != null) return address.getHostAddress
 
       throw new IllegalStateException("Failed to resolve " + s)

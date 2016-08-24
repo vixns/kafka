@@ -26,13 +26,13 @@ class ClusterTest extends KafkaMesosTestCase {
   var cluster: Cluster = new Cluster()
 
   @Before
-  override def before {
-    super.before
+  override def before() {
+    super.before()
     cluster.clear()
   }
 
   @Test
-  def addBroker_removeBroker_getBrokers {
+  def add_broker_removeBroker_getBrokers() {
     assertTrue(cluster.getBrokers.isEmpty)
 
     val broker0 = cluster.addBroker(new Broker("0"))
@@ -47,7 +47,7 @@ class ClusterTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def getBroker {
+  def get_broker() {
     assertNull(cluster.getBroker("0"))
 
     val broker0 = cluster.addBroker(new Broker("0"))
@@ -55,7 +55,7 @@ class ClusterTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def save_load {
+  def save_load() {
     cluster.addBroker(new Broker("0"))
     cluster.addBroker(new Broker("1"))
     cluster.save()
@@ -66,7 +66,7 @@ class ClusterTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def toJson_fromJson {
+  def to_json_fromJson() {
     val broker0 = cluster.addBroker(new Broker("0"))
     broker0.task = new Broker.Task("1", "slave", "executor", "host", _state = State.RUNNING)
     cluster.addBroker(new Broker("1"))

@@ -31,8 +31,8 @@ import scala.collection.JavaConversions._
 
 class HttpServerTest extends KafkaMesosTestCase {
   @Before
-  override def before {
-    super.before
+  override def before() {
+    super.before()
     startHttpServer()
     Cli.api = Config.api
 
@@ -40,20 +40,20 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
   
   @After
-  override def after {
+  override def after() {
     stopHttpServer()
-    super.after
+    super.after()
     stopZkServer()
   }
   
   @Test
-  def broker_add {
+  def broker_add() {
     val json = sendRequest("/broker/add", parseMap("broker=0,cpus=0.1,mem=128"))
     val brokerNodes = json("brokers").asInstanceOf[List[Map[String, Object]]]
 
     assertEquals(1, brokerNodes.size)
     val responseBroker = new Broker()
-    responseBroker.fromJson(brokerNodes(0))
+    responseBroker.fromJson(brokerNodes.head)
 
     assertEquals(1, Scheduler.cluster.getBrokers.size())
     val broker = Scheduler.cluster.getBrokers.get(0)
@@ -65,7 +65,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_add_range {
+  def broker_add_range() {
     val json = sendRequest("/broker/add", parseMap("broker=0..4"))
     val brokerNodes = json("brokers").asInstanceOf[List[Map[String, Object]]]
 
@@ -74,14 +74,14 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_update {
+  def broker_update() {
     sendRequest("/broker/add", parseMap("broker=0"))
     var json = sendRequest("/broker/update", parseMap("broker=0,cpus=1,heap=128,failoverDelay=5s"))
     val brokerNodes = json("brokers").asInstanceOf[List[Map[String, Object]]]
 
     assertEquals(1, brokerNodes.size)
     val responseBroker = new Broker()
-    responseBroker.fromJson(brokerNodes(0))
+    responseBroker.fromJson(brokerNodes.head)
 
     val broker = Scheduler.cluster.getBroker("0")
     assertEquals(1, broker.cpus, 0.001)
@@ -120,7 +120,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_list {
+  def broker_list() {
     val cluster = Scheduler.cluster
     cluster.addBroker(new Broker("0"))
     cluster.addBroker(new Broker("1"))
@@ -141,22 +141,22 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_clone {
+  def broker_clone() {
     val cluster = Scheduler.cluster
     cluster.addBroker(new Broker("0"))
 
-    var json = sendRequest("/broker/clone", Map("broker" -> "1", "source" -> "0"))
-    var brokerNodes = json("brokers").asInstanceOf[List[Map[String, Object]]]
+    val json = sendRequest("/broker/clone", Map("broker" -> "1", "source" -> "0"))
+    val brokerNodes = json("brokers").asInstanceOf[List[Map[String, Object]]]
     assertEquals(1, brokerNodes.size)
 
     val broker = new Broker()
-    broker.fromJson(brokerNodes(0))
+    broker.fromJson(brokerNodes.head)
 
     assertEquals(broker.id, "1")
   }
 
   @Test
-  def broker_remove {
+  def broker_remove() {
     val cluster = Scheduler.cluster
     cluster.addBroker(new Broker("0"))
     cluster.addBroker(new Broker("1"))
@@ -173,7 +173,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def broker_start_stop {
+  def broker_start_stop() {
     val cluster = Scheduler.cluster
     val broker0 = cluster.addBroker(new Broker("0"))
     val broker1 = cluster.addBroker(new Broker("1"))
@@ -198,7 +198,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 5000)
-  def broker_restart: Unit = {
+  def broker_restart(): Unit = {
     def assertErrorContains(params: String, str: String) =
       try { sendRequest("/broker/restart", parseMap(params)); fail() }
       catch { case e: IOException => assertTrue(e.getMessage.contains(str))}
@@ -275,7 +275,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_list {
+  def topic_list() {
     var json = sendRequest("/topic/list", parseMap(""))
     assertTrue(json("topics").asInstanceOf[List[Map[String, Object]]].isEmpty)
 
@@ -292,12 +292,12 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
   
   @Test
-  def topic_add {
+  def topic_add() {
     val topics = Scheduler.cluster.topics
 
     // add t0 topic
     var json = sendRequest("/topic/add", parseMap("topic=t0"))
-    val t0Node = json("topics").asInstanceOf[List[Map[String, Object]]](0)
+    val t0Node = json("topics").asInstanceOf[List[Map[String, Object]]].head
     assertEquals("t0", t0Node("name"))
     assertEquals(Map("0" -> "0"), t0Node("partitions"))
 
@@ -305,7 +305,7 @@ class HttpServerTest extends KafkaMesosTestCase {
 
     // add t1 topic
     json = sendRequest("/topic/add", parseMap("topic=t1,partitions=2,options=flush.ms\\=1000"))
-    val topicNode = json("topics").asInstanceOf[List[Map[String, Object]]](0)
+    val topicNode = json("topics").asInstanceOf[List[Map[String, Object]]].head
     assertEquals("t1", topicNode("name"))
 
     val t1: Topic = topics.getTopic("t1")
@@ -319,13 +319,13 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
   
   @Test
-  def topic_update {
+  def topic_update() {
     val topics = Scheduler.cluster.topics
     topics.addTopic("t")
 
     // update topic t
     val json = sendRequest("/topic/update", parseMap("topic=t,options=flush.ms\\=1000"))
-    val topicNode = json("topics").asInstanceOf[List[Map[String, Object]]](0)
+    val topicNode = json("topics").asInstanceOf[List[Map[String, Object]]].head
     assertEquals("t", topicNode("name"))
 
     val t = topics.getTopic("t")
@@ -334,7 +334,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def topic_rebalance {
+  def topic_rebalance() {
     val cluster = Scheduler.cluster
     cluster.addBroker(new Broker("0"))
     cluster.addBroker(new Broker("1"))
@@ -352,7 +352,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def jar_download {
+  def jar_download() {
     val file = download("/jar/kafka-mesos.jar")
     val source = scala.io.Source.fromFile(file)
     val content = try source.mkString finally source.close()
@@ -360,7 +360,7 @@ class HttpServerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def kafka_download {
+  def kafka_download() {
     val file = download("/kafka/kafka.tgz")
     val source = scala.io.Source.fromFile(file)
     val content = try source.mkString finally source.close()

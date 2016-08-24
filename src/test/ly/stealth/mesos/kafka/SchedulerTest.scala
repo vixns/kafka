@@ -26,7 +26,7 @@ import net.elodina.mesos.util.Strings.parseMap
 
 class SchedulerTest extends KafkaMesosTestCase {
   @Test
-  def newExecutor {
+  def newExecutor() {
     val broker = new Broker("1")
     broker.heap = 512
     broker.jvmOptions = "-Xms64m"
@@ -42,7 +42,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def newTask {
+  def newTask() {
     val broker = new Broker("1")
     broker.options = parseMap("a=1")
     broker.log4jOptions = parseMap("b=2")
@@ -76,7 +76,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def syncBrokers {
+  def syncBrokers() {
     val broker = Scheduler.cluster.addBroker(new Broker())
     val offer = this.offer(s"cpus:${broker.cpus}; mem:${broker.mem}; ports:1000")
 
@@ -99,7 +99,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def acceptOffer {
+  def acceptOffer() {
     val broker = Scheduler.cluster.addBroker(new Broker())
     broker.active = true
 
@@ -117,7 +117,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def onBrokerStatus {
+  def onBrokerStatus() {
     val broker = Scheduler.cluster.addBroker(new Broker())
     broker.task = new Broker.Task(Broker.nextTaskId(broker), "slave", "executor", "host")
     assertEquals(Broker.State.STARTING, broker.task.state)
@@ -134,7 +134,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def onBrokerStarted {
+  def onBrokerStarted() {
     val broker = Scheduler.cluster.addBroker(new Broker())
     broker.task = new Broker.Task("task")
     assertEquals(Broker.State.STARTING, broker.task.state)
@@ -145,7 +145,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def onBrokerStopped {
+  def onBrokerStopped() {
     val broker = Scheduler.cluster.addBroker(new Broker())
     val task = new Broker.Task("task", _state = Broker.State.RUNNING)
 
@@ -180,7 +180,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def launchTask {
+  def launchTask() {
     val broker = Scheduler.cluster.addBroker(new Broker("100"))
     val offer = this.offer("id", "fw-id", "slave-id", "host", s"cpus:${broker.cpus}; mem:${broker.mem}", "a=1,b=2")
     broker.needsRestart = true
@@ -198,7 +198,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def reconcileTasksIfRequired {
+  def reconcileTasksIfRequired() {
     Scheduler.reconcileTime = null
     val broker0 = Scheduler.cluster.addBroker(new Broker("0"))
 
@@ -230,7 +230,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def otherTasksAttributes {
+  def otherTasksAttributes() {
     val broker0 = Scheduler.cluster.addBroker(new Broker("0"))
     broker0.task = new Broker.Task(_hostname = "host0", _attributes = parseMap("a=1,b=2"))
 
@@ -243,7 +243,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def onFrameworkMessage = {
+  def onFrameworkMessage() {
     val broker0 = Scheduler.cluster.addBroker(new Broker("0"))
     broker0.active = true
     val broker1 = Scheduler.cluster.addBroker(new Broker("1"))
@@ -294,7 +294,7 @@ class SchedulerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def sendReceiveBrokerLog = {
+  def sendReceiveBrokerLog() {
     val broker = Scheduler.cluster.addBroker(new Broker("0"))
     broker.task = new Broker.Task("task-id", "slave-id", "executor-id")
 

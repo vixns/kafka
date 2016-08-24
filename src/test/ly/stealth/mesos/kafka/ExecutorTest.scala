@@ -25,7 +25,7 @@ import net.elodina.mesos.util.Strings
 
 class ExecutorTest extends KafkaMesosTestCase {
   @Test(timeout = 5000)
-  def startBroker_success {
+  def startBroker_success() {
     val data: String = Strings.formatMap(util.Collections.singletonMap("broker", "" + new Broker().toJson()))
     Executor.startBroker(executorDriver, task("id", "task", "slave", data))
     executorDriver.waitForStatusUpdates(1)
@@ -45,7 +45,7 @@ class ExecutorTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 5000)
-  def startBroker_failure {
+  def startBroker_failure() {
     Executor.server.asInstanceOf[TestBrokerServer].failOnStart = true
     Executor.startBroker(executorDriver, task())
 
@@ -58,7 +58,7 @@ class ExecutorTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def stopExecutor {
+  def stopExecutor() {
     Executor.server.start(null, null)
     assertTrue(Executor.server.isStarted)
     assertEquals(Status.DRIVER_RUNNING, executorDriver.status)
@@ -72,7 +72,7 @@ class ExecutorTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 5000)
-  def launchTask {
+  def launchTask() {
     val data: String = Strings.formatMap(util.Collections.singletonMap("broker", "" + new Broker().toJson()))
     Executor.launchTask(executorDriver, task("id", "task", "slave", data))
 
@@ -81,7 +81,7 @@ class ExecutorTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 5000)
-  def killTask {
+  def killTask() {
     Executor.server.start(null, null)
     Executor.killTask(executorDriver, taskId())
 
@@ -90,7 +90,7 @@ class ExecutorTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def shutdown {
+  def shutdown() {
     Executor.server.start(null, null)
     Executor.shutdown(executorDriver)
     assertFalse(Executor.server.isStarted)

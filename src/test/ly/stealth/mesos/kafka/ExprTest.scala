@@ -7,19 +7,19 @@ import net.elodina.mesos.util.Strings.parseMap
 
 class ExprTest extends KafkaMesosTestCase {
   @Before
-  override def before {
-    super.before
+  override def before() {
+    super.before()
     startZkServer()
   }
 
   @After
-  override def after {
-    super.after
+  override def after() {
+    super.after()
     stopZkServer()
   }
 
   @Test
-  def expandBrokers {
+  def expandBrokers() {
     val cluster = Scheduler.cluster
 
     for (i <- 0 until 5)
@@ -49,7 +49,7 @@ class ExprTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def expandBrokers_attributes {
+  def expandBrokers_attributes() {
     val cluster = Scheduler.cluster
     val b0 = cluster.addBroker(new Broker("0"))
     val b1 = cluster.addBroker(new Broker("1"))
@@ -79,7 +79,7 @@ class ExprTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def expandBrokers_sortByAttrs {
+  def expandBrokers_sortByAttrs() {
     val cluster = Scheduler.cluster
     val b0 = cluster.addBroker(new Broker("0"))
     val b1 = cluster.addBroker(new Broker("1"))
@@ -104,7 +104,7 @@ class ExprTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def expandTopics {
+  def expandTopics() {
     val cluster = Scheduler.cluster
     val topics: Topics = cluster.topics
 

@@ -27,31 +27,29 @@ import kafka.controller.LeaderIsrAndControllerEpoch
 import scala.collection.JavaConversions._
 import scala.collection.{mutable, Seq, Map}
 
-import org.I0Itec.zkclient.ZkClient
-
 import kafka.admin._
-import kafka.utils.{ZkUtils, ZKStringSerializer}
+import kafka.utils.ZkUtils
 import scala.util.parsing.json.JSONObject
 import ly.stealth.mesos.kafka.Topics.Topic
 import kafka.log.LogConfig
 
 class Topics {
-  private def newZkClient: ZkClient = new ZkClient(Config.zk, 30000, 30000, ZKStringSerializer)
+  private def newZkUtils: ZkUtils = ZkUtils(Config.zk, 30000, 30000, isZkSecurityEnabled = false)
 
   def getTopic(name: String): Topics.Topic = {
     if (name == null) return null
     val topics: util.List[Topic] = getTopics.filter(_.name == name)
-    if (topics.length > 0) topics(0) else null
+    if (topics.nonEmpty) topics.head else null
   }
 
   def getTopics: util.List[Topics.Topic] = {
-    val zkClient = newZkClient
+    val zkUtils = newZkUtils
 
     try {
-      var names = ZkUtils.getAllTopics(zkClient)
+      val names = zkUtils.getAllTopics()
 
-      val assignments: mutable.Map[String, Map[Int, Seq[Int]]] = ZkUtils.getPartitionAssignmentForTopics(zkClient, names)
-      val configs = AdminUtils.fetchAllTopicConfigs(zkClient)
+      val assignments: mutable.Map[String, Map[Int, Seq[Int]]] = zkUtils.getPartitionAssignmentForTopics(names)
+      val configs = AdminUtils.fetchAllTopicConfigs(zkUtils)
 
       val topics = new util.ArrayList[Topics.Topic]
       for (name <- names.sorted)
@@ -63,24 +61,24 @@ class Topics {
 
       topics
     } finally {
-      zkClient.close()
+      zkUtils.close()
     }
   }
 
   private val NoLeader = LeaderIsrAndControllerEpoch(LeaderAndIsr(LeaderAndIsr.NoLeader, -1, List(), -1), -1)
 
   def getPartitions(topics: util.List[String]): Map[String, Set[Topics.Partition]] = {
-    val zkClient = newZkClient
+    val zkUtils = newZkUtils
 
     try {
       // returns topic name -> (partition -> brokers)
-      val assignments = ZkUtils.getPartitionAssignmentForTopics(zkClient, topics)
+      val assignments = zkUtils.getPartitionAssignmentForTopics(topics)
       val topicAndPartitions = assignments.flatMap {
         case (topic, partitions) => partitions.map {
           case (partition, _)  => TopicAndPartition(topic, partition)
         }
       }.toSet
-      val leaderAndisr =  ZkUtils.getPartitionLeaderAndIsrForTopics(zkClient, topicAndPartitions)
+      val leaderAndisr = zkUtils.getPartitionLeaderAndIsrForTopics(zkUtils.zkClient, topicAndPartitions)
 
       topicAndPartitions.map(tap => {
         val replicas = assignments(tap.topic).getOrElse(tap.partition, Seq())
@@ -95,20 +93,21 @@ class Topics {
       }).groupBy(_._1).mapValues(v => v.map(_._2))
     }
     finally {
-      zkClient.close()
+      zkUtils.close()
     }
   }
 
   def fairAssignment(partitions: Int = 1, replicas: Int = 1, brokers: util.List[Int] = null): util.Map[Int, util.List[Int]] = {
     var brokers_ = brokers
+    val zkUtils = newZkUtils
 
     if (brokers_ == null) {
-      val zkClient = newZkClient
-      try { brokers_ = ZkUtils.getSortedBrokerList(zkClient)}
-      finally { zkClient.close() }
+      try { brokers_ = zkUtils.getSortedBrokerList()}
+      finally { zkUtils.close() }
     }
 
-    AdminUtils.assignReplicasToBrokers(brokers_, partitions, replicas, 0, 0).mapValues(new util.ArrayList[Int](_))
+    val brokerMetadatas = AdminUtils.getBrokerMetadatas(zkUtils, brokerList=Option(brokers_))
+    AdminUtils.assignReplicasToBrokers(brokerMetadatas, partitions, replicas, 0, 0).mapValues(new util.ArrayList[Int](_))
   }
 
   def addTopic(name: String, assignment: util.Map[Int, util.List[Int]] = null, options: util.Map[String, String] = null): Topic = {
@@ -119,9 +118,9 @@ class Topics {
     if (options != null)
       for ((k, v) <- options) config.setProperty(k, v)
 
-    val zkClient = newZkClient
-    try { AdminUtils.createOrUpdateTopicPartitionAssignmentPathInZK(zkClient, name, assignment_.mapValues(_.toList), config) }
-    finally { zkClient.close() }
+    val zkUtils = newZkUtils
+    try { AdminUtils.createOrUpdateTopicPartitionAssignmentPathInZK(zkUtils, name, assignment_.mapValues(_.toList), config) }
+    finally { zkUtils.close() }
 
     getTopic(name)
   }
@@ -130,9 +129,9 @@ class Topics {
     val config: Properties = new Properties()
     for ((k, v) <- options) config.setProperty(k, v)
 
-    val zkClient = newZkClient
-    try { AdminUtils.changeTopicConfig(zkClient, topic.name, config) }
-    finally { zkClient.close() }
+    val zkUtils = newZkUtils
+    try { AdminUtils.changeTopicConfig(zkUtils, topic.name, config) }
+    finally { zkUtils.close() }
   }
 
   def validateOptions(options: util.Map[String, String]): String = {
@@ -178,7 +177,7 @@ object Topics {
       obj("leader") = leader
       obj("expectedLeader") = expectedLeader
 
-      new JSONObject(obj.toMap)
+      JSONObject(obj.toMap)
     }
   }
 
@@ -217,10 +216,10 @@ object Topics {
       val partitionsObj = new collection.mutable.LinkedHashMap[String, Any]()
       for ((partition, brokers) <- partitions)
         partitionsObj.put("" + partition, brokers.mkString(", "))
-      obj("partitions") = new JSONObject(partitionsObj.toMap)
+      obj("partitions") = JSONObject(partitionsObj.toMap)
 
-      obj.put("options", new JSONObject(options.toMap))
-      new JSONObject(obj.toMap)
+      obj.put("options", JSONObject(options.toMap))
+      JSONObject(obj.toMap)
     }
   }
 }

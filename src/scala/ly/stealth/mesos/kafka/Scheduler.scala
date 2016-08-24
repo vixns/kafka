@@ -86,7 +86,7 @@ object Scheduler extends org.apache.mesos.Scheduler {
         "host.name" -> offer.getHostname
       )
 
-      if (HttpServer.kafkaVersion.compareTo(new Version("0.9")) >= 0)
+      if (HttpServer.kafkaVersion.compareTo(new Version("0.10")) >= 0)
         defaults += ("listeners" -> s"PLAINTEXT://:${reservation.port}")
 
       if (reservation.volume != null)
@@ -337,7 +337,7 @@ object Scheduler extends org.apache.mesos.Scheduler {
   private[kafka] val RECONCILE_MAX_TRIES = 3
 
   private[kafka] var reconciles: Int = 0
-  private[kafka] var reconcileTime: Date = null
+  private[kafka] var reconcileTime: Date = _
 
   private[kafka] def reconcileTasksIfRequired(force: Boolean = false, now: Date = new Date()): Boolean = {
     var didSomething = false

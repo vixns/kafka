@@ -33,18 +33,18 @@ import java.util
 import org.apache.mesos.Protos.{Value, Volume, Resource, Offer}
 
 class BrokerTest extends KafkaMesosTestCase {
-  var broker: Broker = null
+  var broker: Broker = _
 
   @Before
-  override def before {
-    super.before
+  override def before() {
+    super.before()
     broker = new Broker("0")
     broker.cpus = 0
     broker.mem = 0
   }
 
   @Test
-  def options {
+  def options() {
     // $id substitution
     broker.options = parseMap("a=$id,b=2")
     assertEquals(parseMap("a=0,b=2"), broker.options())
@@ -62,7 +62,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def matches {
+  def matches() {
     // cpus
     broker.cpus = 0.5
     assertNull(broker.matches(offer("cpus:0.2; cpus(role):0.3; ports:1000")))
@@ -81,7 +81,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def matches_hostname {
+  def matches_hostname() {
     val now = new Date(0)
     val resources: String = "ports:0..10"
 
@@ -113,7 +113,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def matches_stickiness {
+  def matches_stickiness() {
     val host0 = "host0"
     val host1 = "host1"
     val resources = "ports:0..10"
@@ -129,7 +129,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def matches_attributes {
+  def matches_attributes() {
     val now = new Date(0)
 
     def offer(attributes: String): Offer = this.offer("id", "fw-id", "slave-id", "host", "ports:0..10", attributes)
@@ -148,7 +148,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def getReservations_dynamic = {
+  def get_reservations_dynamic() = {
     broker.cpus = 2
     broker.mem = 200
     // ignore non-dynamically reserved disk
@@ -169,7 +169,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def getReservations_volume = {
+  def get_reservations_volume() = {
     broker.cpus = 2
     broker.mem = 200
     broker.volume = "test"
@@ -222,7 +222,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def getReservations {
+  def get_reservations() {
     broker.cpus = 2
     broker.mem = 100
 
@@ -259,7 +259,7 @@ class BrokerTest extends KafkaMesosTestCase {
 
 
   @Test
-  def getSuitablePort {
+  def get_suitablePort() {
     def ranges(s: String): util.List[Range] = {
       if (s.isEmpty) return Collections.emptyList()
       s.split(",").toList.map(s => new Range(s.trim))
@@ -293,7 +293,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def shouldStart {
+  def shouldStart() {
     val host = "host"
     // active
     broker.active = false
@@ -320,7 +320,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def shouldStop {
+  def shouldStop() {
     assertFalse(broker.shouldStop)
 
     broker.task = new Broker.Task()
@@ -331,7 +331,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def state {
+  def state() {
     assertEquals("stopped", broker.state())
 
     broker.task = new Task(_state = State.STOPPING)
@@ -358,7 +358,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test(timeout = 5000)
-  def waitFor {
+  def waitFor() {
     def deferStateSwitch(state: String, delay: Long) {
       new Thread() {
         override def run() {
@@ -382,7 +382,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def toJson_fromJson {
+  def to_json_fromJson() {
     broker.active = true
     broker.cpus = 0.5
     broker.mem = 128
@@ -408,14 +408,14 @@ class BrokerTest extends KafkaMesosTestCase {
 
   // static part
   @Test
-  def idFromTaskId {
+  def idFromTaskId() {
     assertEquals("0", Broker.idFromTaskId(Broker.nextTaskId(new Broker("0"))))
     assertEquals("100", Broker.idFromTaskId(Broker.nextTaskId(new Broker("100"))))
   }
 
   // Reservation
   @Test
-  def Reservation_toResources {
+  def Reservation_toResources() {
     // shared
     var reservation = new Broker.Reservation(null, sharedCpus = 0.5, sharedMem = 100, sharedPort = 1000)
     assertEquals(resources("cpus:0.5; mem:100; ports:1000"), reservation.toResources)
@@ -431,7 +431,7 @@ class BrokerTest extends KafkaMesosTestCase {
 
   // Stickiness
   @Test
-  def Stickiness_allowsHostname {
+  def Stickiness_allowsHostname() {
     val stickiness = new Stickiness()
     assertTrue(stickiness.allowsHostname("host0", new Date(0)))
     assertTrue(stickiness.allowsHostname("host1", new Date(0)))
@@ -444,7 +444,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Stickiness_registerStart_registerStop {
+  def Stickiness_registerStart_registerStop() {
     val stickiness = new Stickiness()
     assertNull(stickiness.hostname)
     assertNull(stickiness.stopTime)
@@ -463,7 +463,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Stickiness_toJson_fromJson {
+  def Stickiness_toJson_fromJson() {
     val stickiness = new Stickiness()
     stickiness.registerStart("localhost")
     stickiness.registerStop(new Date(0))
@@ -477,7 +477,7 @@ class BrokerTest extends KafkaMesosTestCase {
 
   // Failover
   @Test
-  def Failover_currentDelay {
+  def Failover_currentDelay() {
     val failover = new Failover(new Period("1s"), new Period("5s"))
 
     failover.failures = 0
@@ -521,7 +521,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Failover_delayExpires {
+  def Failover_delayExpires() {
     val failover = new Failover(new Period("1s"))
     assertEquals(new Date(0), failover.delayExpires)
 
@@ -533,7 +533,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Failover_isWaitingDelay {
+  def Failover_isWaitingDelay() {
     val failover = new Failover(new Period("1s"))
     assertFalse(failover.isWaitingDelay(new Date(0)))
 
@@ -546,7 +546,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Failover_isMaxTriesExceeded {
+  def Failover_isMaxTriesExceeded() {
     val failover = new Failover()
 
     failover.failures = 100
@@ -557,7 +557,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Failover_registerFailure_resetFailures {
+  def Failover_registerFailure_resetFailures() {
     val failover = new Failover()
     assertEquals(0, failover.failures)
     assertNull(failover.failureTime)
@@ -579,7 +579,7 @@ class BrokerTest extends KafkaMesosTestCase {
   }
 
   @Test
-  def Failover_toJson_fromJson {
+  def Failover_toJson_fromJson() {
     val failover = new Failover(new Period("1s"), new Period("5s"))
     failover.maxTries = 10
     failover.resetFailures()
@@ -593,7 +593,7 @@ class BrokerTest extends KafkaMesosTestCase {
 
   // Task
   @Test
-  def Task_toJson_fromJson {
+  def Task_toJson_fromJson() {
     val task = new Task("id", "slave", "executor", "host", parseMap("a=1,b=2"), State.RUNNING)
     task.endpoint = new Endpoint("localhost:9092")
 

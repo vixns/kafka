@@ -1,22 +1,27 @@
 package ly.stealth.mesos.kafka
 
-import java.io.{FileWriter, File}
-import org.I0Itec.zkclient.{ZkClient, IDefaultNameSpace, ZkServer}
+import java.io.File
+
+import org.I0Itec.zkclient.{IDefaultNameSpace, ZkClient, ZkServer}
 import org.apache.log4j.BasicConfigurator
 import ly.stealth.mesos.kafka.Cluster.FsStorage
 import net.elodina.mesos.util.{IO, Net, Version}
-import org.junit.{Ignore, Before, After}
+import org.junit.{After, Before, Ignore}
+
 import scala.concurrent.duration.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util
 
+import kafka.utils.ZkUtils
+
 @Ignore
 class KafkaMesosTestCase extends net.elodina.mesos.test.MesosTestCase {
-  var zkDir: File = null
-  var zkServer: ZkServer = null
+  var zkDir: File = _
+  var zkServer: ZkServer = _
+  var zkUtils: ZkUtils = _
 
   @Before
-  def before {
+  def before() {
     BasicConfigurator.configure()
 
     val storageFile = File.createTempFile(getClass.getSimpleName, null)
@@ -44,12 +49,12 @@ class KafkaMesosTestCase extends net.elodina.mesos.test.MesosTestCase {
     }
 
     HttpServer.jar = createTempFile("executor.jar", "executor")
-    HttpServer.kafkaDist = createTempFile("kafka-0.9.3.0.tgz", "kafka")
-    HttpServer.kafkaVersion = new Version("0.9.3.0")
+    HttpServer.kafkaDist = createTempFile("kafka-0.10.0.1.tgz", "kafka")
+    HttpServer.kafkaVersion = new Version("0.10.0.1")
   }
 
   @After
-  def after {
+  def after() {
     Scheduler.disconnected(schedulerDriver)
 
     Scheduler.cluster.rebalancer = new Rebalancer()
@@ -74,14 +79,16 @@ class KafkaMesosTestCase extends net.elodina.mesos.test.MesosTestCase {
     zkServer = new ZkServer("" + zkDir, "" + zkDir, defaultNamespace, port)
     zkServer.start()
 
-    val zkClient: ZkClient = zkServer.getZkClient
-    zkClient.createPersistent("/brokers/ids/0", true)
-    zkClient.createPersistent("/config/changes", true)
+    zkUtils = ZkUtils(Config.zk, 30000, 30000, isZkSecurityEnabled = false)
+    zkUtils.createPersistentPath("/brokers/ids/0", "{\"endpoints\":[],\"version\":2}")
+    zkUtils.createPersistentPath("/brokers/ids/1", "{\"endpoints\":[],\"version\":2}")
+    zkUtils.createPersistentPath("/brokers/ids/2", "{\"endpoints\":[],\"version\":2}")
+    zkUtils.createPersistentPath("/config/changes")
   }
 
   def stopZkServer() {
     if (zkDir == null) return
-
+    zkUtils.close()
     zkServer.shutdown()
     def delete(dir: File) {
       val children: Array[File] = dir.listFiles()

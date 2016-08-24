@@ -24,12 +24,12 @@ import java.io._
 import java.util
 import scala.collection.JavaConversions._
 import java.util.{Date, Properties, Collections}
-import ly.stealth.mesos.kafka.Util.{BindAddress}
+import ly.stealth.mesos.kafka.Util.BindAddress
 import net.elodina.mesos.util.{Strings, Period, Repr}
 import ly.stealth.mesos.kafka.Topics.{Partition, Topic}
 
 object Cli {
-  var api: String = null
+  var api: String = _
   var out: PrintStream = System.out
   var err: PrintStream = System.err
 

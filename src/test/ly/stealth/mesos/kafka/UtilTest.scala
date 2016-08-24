@@ -20,11 +20,10 @@ package ly.stealth.mesos.kafka
 import org.junit.Test
 import org.junit.Assert._
 import ly.stealth.mesos.kafka.Util.BindAddress
-import java.util
 
 class UtilTest {
   @Test
-  def parseJson {
+  def parseJson() {
     val node: Map[String, Object] = Util.parseJson("{\"a\":\"1\", \"b\":\"2\"}")
     assertEquals(2, node.size)
     assertEquals("1", node("a").asInstanceOf[String])
@@ -33,7 +32,7 @@ class UtilTest {
 
   // BindAddress
   @Test
-  def BindAddress_init {
+  def BindAddress_init() {
     new BindAddress("broker0")
     new BindAddress("192.168.*")
     new BindAddress("if:eth1")
@@ -44,7 +43,7 @@ class UtilTest {
   }
 
   @Test
-  def BindAddress_resolve {
+  def BindAddress_resolve() {
     // address without mask
     assertEquals("host", new BindAddress("host").resolve())
 
