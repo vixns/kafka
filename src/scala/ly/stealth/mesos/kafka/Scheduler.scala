@@ -26,7 +26,6 @@ import com.google.protobuf.ByteString
 import java.util.{Collections, Date}
 import scala.collection.JavaConversions._
 import org.apache.log4j._
-import scala.Some
 import org.apache.mesos.Protos.Environment.Variable
 import scala.collection.mutable
 
@@ -72,6 +71,7 @@ object Scheduler extends org.apache.mesos.Scheduler {
       .setExecutorId(ExecutorID.newBuilder.setValue(Broker.nextExecutorId(broker)))
       .setCommand(commandBuilder)
       .setName("broker-" + broker.id)
+      .setLabels(Labels.newBuilder().addLabels(Label.newBuilder().setKey("overrideTaskName").setValue("kafka")))
       .build()
   }
 
@@ -384,7 +384,7 @@ object Scheduler extends org.apache.mesos.Scheduler {
     if (master == null) return
 
     val minVersion: Version = new Version("0.23.0")
-    var version: Version = if (master.getVersion != null) new Version(master.getVersion) else null
+    val version: Version = if (master.getVersion != null) new Version(master.getVersion) else null
 
     if (version == null || version.compareTo(minVersion) < 0) {
       val versionStr: String = if (version == null) "?(<0.23.0)" else "" + version
