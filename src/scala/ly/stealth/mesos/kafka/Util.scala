@@ -52,7 +52,7 @@ object Util {
 
     var width = 80
     try {
-      new ProcessBuilder(List("bash", "-c", "tput cols"))
+      new ProcessBuilder(List("bash", "-c", "if test -t 0; then tput cols; fi"))
         .inheritIO().redirectOutput(file).start().waitFor()
 
       val source = scala.io.Source.fromFile(file)
