@@ -14,7 +14,10 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E56151BF \
     && mv /src/kafka*jar / \
     && mv /src/run.sh /run.sh && chmod 555 /run.sh \
     && dpkg --purge maven scale && apt-get -y autoremove \
-    && cd / && rm -rf /src /root/.gradle /var/lib/apt/*
+    && cd / \
+    && wget -q https://archive.apache.org/dist/kafka/0.10.2.0/kafka_2.11-0.10.2.0.tgz \
+    && rm -rf /src /root/.gradle /var/lib/apt/*
 
+WORKDIR /
 EXPOSE 7000
 ENTRYPOINT ["/run.sh"]
