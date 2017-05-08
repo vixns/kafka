@@ -19,55 +19,59 @@ package ly.stealth.mesos.kafka
 
 import org.junit.{After, Before, Test}
 import org.junit.Assert._
+import org.I0Itec.zkclient.ZkClient
 import kafka.utils.ZkUtils
-
 import scala.collection.JavaConversions._
 import java.util
-
-import kafka.common.TopicAndPartition
+import ly.stealth.mesos.kafka.scheduler.{Rebalancer, ZKStringSerializer, ZkUtilsWrapper}
 
 class RebalancerTest extends KafkaMesosTestCase {
   var rebalancer: Rebalancer = _
+  var zkClient: ZkClient = _
 
   @Before
-  override def before() {
-    super.before()
+  override def before {
+    super.before
     rebalancer = new Rebalancer()
 
     val port = 56789
     Config.zk = s"localhost:$port"
 
     startZkServer()
+    zkClient = zkServer.getZkClient
+    zkClient.setZkSerializer(ZKStringSerializer)
   }
 
   @After
-  override def after() {
-    super.after()
+  override def after {
+    super.after
     stopZkServer()
   }
 
   @Test
-  def start() {
-    val cluster = Scheduler.cluster
-    cluster.addBroker(new Broker("0"))
-    cluster.addBroker(new Broker("1"))
+  def start {
+    val cluster = registry.cluster
+    cluster.addBroker(new Broker(0))
+    cluster.addBroker(new Broker(1))
 
-    cluster.topics.addTopic("topic", Map(0 -> util.Arrays.asList(0), 1 -> util.Arrays.asList(0)))
+    cluster.topics.addTopic("topic", Map(0 -> Seq(0), 1 -> Seq(0)))
     assertFalse(rebalancer.running)
-    rebalancer.start(util.Arrays.asList("topic"), util.Arrays.asList("0", "1"))
+    rebalancer.start(Seq("topic"), Seq(0, 1))
 
     assertTrue(rebalancer.running)
     assertFalse(rebalancer.state.isEmpty)
   }
 
-  @Test
-  def start_in_progress() {
-    Scheduler.cluster.topics.addTopic("topic", Map(0 -> util.Arrays.asList(0), 1 -> util.Arrays.asList(0)))
-    val partitionsReassignmentData = Map(TopicAndPartition("topic", 0) -> Seq(0,1))
-    val jsonReassignmentData = zkUtils.formatAsReassignmentJson(partitionsReassignmentData)
-    zkUtils.createPersistentPath(ZkUtils.ReassignPartitionsPath, jsonReassignmentData)
+  // This test no longer applies in kafka 0.10.0
+  //@Test
+  def start_in_progress {
+    registry.cluster.topics.addTopic("topic", Map(0 -> Seq(0), 1 -> Seq(0)))
+    ZkUtilsWrapper().createPersistentPath(ZkUtils.ReassignPartitionsPath)
 
-    try { rebalancer.start(util.Arrays.asList("topic"), util.Arrays.asList("0", "1")); fail() }
-    catch { case e: Rebalancer.Exception => assertTrue(e.getMessage, e.getMessage.contains("in progress")) }
+    registry.cluster.addBroker(new Broker(2))
+    try { rebalancer.start(Seq("topic"), Seq(1, 2)); fail() }
+    catch {
+      case e: Rebalancer.Exception => assertTrue(e.getMessage, e.getMessage.contains("in progress"))
+    }
   }
 }
