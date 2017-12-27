@@ -36,9 +36,9 @@ class Broker(val id: Int = 0) {
   var cpus: Double = 1
   var mem: Long = 2048
   var heap: Long = 1024
-  var port: Range = null
-  var volume: String = null
-  var bindAddress: BindAddress = null
+  var port: Range = _
+  var volume: String = _
+  var bindAddress: BindAddress = _
   var syslog: Boolean = false
 
   var constraints: Map[String, Constraint] = Map()
@@ -289,8 +289,8 @@ object Broker {
 
   class Stickiness(_period: Period = new Period("10m")) {
     var period: Period = _period
-    @volatile var hostname: String = null
-    @volatile var stopTime: Date = null
+    @volatile var hostname: String = _
+    @volatile var stopTime: Date = _
 
     def expires: Date = if (stopTime != null) new Date(stopTime.getTime + period.ms) else null
 
@@ -312,7 +312,7 @@ object Broker {
     def allowsHostname(hostname: String, now: Date = new Date()): Boolean =
       stickyTimeLeft(now) <= 0 || matchesHostname(hostname)
 
-    def matchesHostname(hostname: String) =
+    def matchesHostname(hostname: String): Boolean =
       this.hostname == null || this.hostname == hostname
 
     override def equals(obj: scala.Any): Boolean = {
@@ -375,10 +375,10 @@ object Broker {
   class Failover(_delay: Period = new Period("1m"), _maxDelay: Period = new Period("10m")) {
     var delay: Period = _delay
     var maxDelay: Period = _maxDelay
-    var maxTries: Integer = null
+    var maxTries: Integer = _
 
     @volatile var failures: Int = 0
-    @volatile var failureTime: Date = null
+    @volatile var failureTime: Date = _
 
     def currentDelay: Period = {
       if (failures == 0) return new Period("0")
@@ -432,7 +432,7 @@ object Broker {
     attributes: Map[String, String] = Map()
   ) {
     @volatile var state: String = State.PENDING
-    var endpoint: Endpoint = null
+    var endpoint: Endpoint = _
 
     def pending: Boolean = state == State.PENDING
 
@@ -457,16 +457,11 @@ object Broker {
   }
 
   class Endpoint(s: String) {
-    var hostname: String = null
-    var port: Int = -1
+    val idx: Int = s.indexOf(":")
+    if (idx == -1) throw new IllegalArgumentException(s)
 
-    {
-      val idx = s.indexOf(":")
-      if (idx == -1) throw new IllegalArgumentException(s)
-
-      hostname = s.substring(0, idx)
-      port = Integer.parseInt(s.substring(idx + 1))
-    }
+    val hostname: String = s.substring(0, idx)
+    val port: Int = Integer.parseInt(s.substring(idx + 1))
 
     def this(hostname: String, port: Int) = this(hostname + ":" + port)
 
@@ -476,7 +471,7 @@ object Broker {
       hostname == endpoint.hostname && port == endpoint.port
     }
 
-    override def hashCode(): Int = 31 * hostname.hashCode + port.hashCode()
+    override def hashCode(): Int = 31 * hostname.hashCode() + port.hashCode()
 
     override def toString: String = hostname + ":" + port
   }
@@ -567,7 +562,7 @@ object Broker {
   }
 
   case class Metrics(data: Map[String, Number] = Map(), timestamp: Long = 0) {
-    def apply(metric: String) = data.get(metric)
+    def apply(metric: String): Option[Number] = data.get(metric)
   }
 
   object State {
