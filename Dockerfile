@@ -10,7 +10,7 @@ COPY --from=0 /src/kafka*jar /
 RUN apt-get update \
 && apt-get install -y gnupg \
 && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E56151BF \
-&& echo "deb http://repos.mesosphere.com/debian jessie main" | tee -a /etc/apt/sources.list.d/mesosphere.list \
+&& echo "deb http://repos.mesosphere.com/debian stretch main" | tee -a /etc/apt/sources.list.d/mesosphere.list \
 && apt-get update \
 && apt-get install -y libcurl4-nss-dev libsasl2-modules libsvn1 libevent-dev libcurl3 curl \
 && apt-get download mesos=1.4.1\* \
