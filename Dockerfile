@@ -12,7 +12,7 @@ RUN apt-get update \
 && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E56151BF \
 && echo "deb http://repos.mesosphere.com/debian stretch main" | tee -a /etc/apt/sources.list.d/mesosphere.list \
 && apt-get update \
-&& apt-get install -y libcurl4-nss-dev libsasl2-modules libsvn1 libevent-dev libcurl3 curl \
+&& apt-get install -y libcurl4-nss-dev libsasl2-modules libsvn1 libevent-dev libcurl3 curl iproute2 \
 && apt-get download mesos=1.4.1\* \
 && dpkg --unpack mesos*.deb \
 && rm /var/lib/dpkg/info/mesos.postinst -f \
