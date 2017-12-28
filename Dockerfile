@@ -6,6 +6,7 @@ RUN  cd /src && ./gradlew clean jar -x test
 
 FROM openjdk:8-jre-slim
 COPY run.sh /run.sh
+WORKDIR /
 COPY --from=0 /src/kafka*jar /
 RUN apt-get update \
 && apt-get install -y gnupg \
