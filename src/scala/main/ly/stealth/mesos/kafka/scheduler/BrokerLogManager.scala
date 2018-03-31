@@ -38,14 +38,14 @@ trait BrokerLogManagerComponentImpl extends BrokerLogManagerComponent {
 
   class BrokerLogManagerImpl extends BrokerLogManager {
     private[this] val pendingLogs = TrieMap[Long, Promise[String]]()
-    private[this] val scheduler: ScheduledExecutorService  = Executors.newScheduledThreadPool(1);
+    private[this] val scheduler: ScheduledExecutorService  = Executors.newScheduledThreadPool(1)
 
     def putLog(requestId: Long, content: String): Unit =
       pendingLogs.get(requestId).foreach { log => log.complete(Success(content)) }
 
     private def scheduleTimeout(promise: Promise[String], timeout: Duration): ScheduledFuture[_] = {
       scheduler.schedule(new Runnable {
-        override def run() = promise.tryFailure(new TimeoutException())
+        override def run(): Unit = promise.tryFailure(new TimeoutException())
       }, timeout.length, timeout.unit)
     }
 

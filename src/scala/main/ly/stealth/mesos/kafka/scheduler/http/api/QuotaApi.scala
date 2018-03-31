@@ -55,7 +55,7 @@ trait QuotaApiComponentImpl extends QuotaApiComponent {
     @Path("list")
     @GET
     @Produces(Array(MediaType.APPLICATION_JSON))
-    def listGet() = list()
+    def listGet(): Response = list()
 
     @Path("set")
     @POST

@@ -32,8 +32,8 @@ import scala.collection.{Map, Seq, mutable}
 class Rebalancer {
   private val logger: Logger = Logger.getLogger("Rebalancer")
 
-  @volatile private var assignment: Map[TopicAndPartition, Seq[Int]] = null
-  @volatile private var reassignment: Map[TopicAndPartition, Seq[Int]] = null
+  @volatile private var assignment: Map[TopicAndPartition, Seq[Int]] = _
+  @volatile private var reassignment: Map[TopicAndPartition, Seq[Int]] = _
 
   private def newZkClient: ZkClient = new ZkClient(Config.zk, 30000, 30000, ZKStringSerializer)
 
@@ -185,7 +185,7 @@ class Rebalancer {
 
   private def getReassignmentState(topicAndPartition: TopicAndPartition, reassigning: Map[TopicAndPartition, Seq[Int]]): String = {
     reassigning.get(topicAndPartition) match {
-      case Some(partition) => "running"
+      case Some(_) => "running"
       case None =>
         // check if the current replica assignment matches the expected one after reassignment
         val assignedBrokers = reassignment(topicAndPartition)

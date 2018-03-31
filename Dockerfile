@@ -14,10 +14,10 @@ RUN apt-get update \
 && echo "deb http://repos.mesosphere.com/debian stretch main" | tee -a /etc/apt/sources.list.d/mesosphere.list \
 && apt-get update \
 && apt-get install -y libcurl4-nss-dev libsasl2-modules libsvn1 libevent-dev libcurl3 curl iproute2 \
-&& apt-get download mesos=1.4.1\* \
+&& apt-get download mesos=1.5.0\* \
 && dpkg --unpack mesos*.deb \
 && rm /var/lib/dpkg/info/mesos.postinst -f \
 && dpkg --configure mesos \
 && rm -f /mesos*deb \
-&& curl -sLO https://archive.apache.org/dist/kafka/1.0.0/kafka_2.11-1.0.0.tgz
+&& curl -sLO https://archive.apache.org/dist/kafka/1.1.0/kafka_2.11-1.1.0.tgz
 ENTRYPOINT ["/run.sh"]

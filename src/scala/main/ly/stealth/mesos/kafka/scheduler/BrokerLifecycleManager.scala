@@ -139,11 +139,11 @@ trait BrokerLifecycleManagerComponentImpl extends BrokerLifecycleManagerComponen
       }
     }
 
-    private def launchBroker(broker: Broker, accept: OfferResult.Accept) = {
+    private def launchBroker(broker: Broker, accept: OfferResult.Accept): Unit = {
       val task = brokerTaskManager.launchBroker(accept)
       broker.task = task
     }
-    private def tryResurrectBroker(status: TaskStatus) = {
+    private def tryResurrectBroker(status: TaskStatus): Unit = {
       val taskId = status.getTaskId
       val brokerId = Broker.idFromTaskId(taskId.getValue)
       val maybeBroker = Option(cluster.getBroker(brokerId))
@@ -158,7 +158,7 @@ trait BrokerLifecycleManagerComponentImpl extends BrokerLifecycleManagerComponen
         case _ => // other states we dont care about.
       }
     }
-    private def tryReattachTask(broker: Broker, status: TaskStatus) = {
+    private def tryReattachTask(broker: Broker, status: TaskStatus): Unit = {
       val kill =
         if (broker.lastTask != null && broker.lastTask.id == status.getTaskId.getValue) {
           logger.warn(s"Reattaching task ${status.getTaskId}")
@@ -176,7 +176,7 @@ trait BrokerLifecycleManagerComponentImpl extends BrokerLifecycleManagerComponen
         brokerTaskManager.killTask(status.getTaskId)
     }
 
-    private[this] def onUnexpectedRunning(broker: Broker, status: TaskStatus) = {
+    private[this] def onUnexpectedRunning(broker: Broker, status: TaskStatus): Unit = {
       // This broker is supposed to be shutting down but instead we got a RUNNING message,
       // try to kill it again
       logger.warn(
@@ -184,7 +184,7 @@ trait BrokerLifecycleManagerComponentImpl extends BrokerLifecycleManagerComponen
       brokerTaskManager.killTask(status.getTaskId)
     }
 
-    private[this] def onReconciled(broker: Broker) = {
+    private[this] def onReconciled(broker: Broker): Unit = {
       broker.task.state = Broker.State.RUNNING
       logger.info(s"Finished reconciling of broker ${ broker.id }, task ${ broker.task.id }")
       taskReconciler.onBrokerReconciled(broker)

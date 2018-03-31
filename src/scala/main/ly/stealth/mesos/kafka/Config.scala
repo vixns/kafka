@@ -21,7 +21,7 @@ import java.io.{File, FileInputStream}
 import java.util.Properties
 import java.net.URI
 import ly.stealth.mesos.kafka.Util.BindAddress
-import net.elodina.mesos.util.{Period, Version}
+import net.elodina.mesos.util.Period
 
 object SchedulerVersion {
   val value = "1.0.0-SNAPSHOT"
@@ -33,10 +33,10 @@ object Config {
   var debug: Boolean = false
   var storage: String = "file:kafka-mesos.json"
 
-  var master: String = null
-  var principal: String = null
-  var secret: String = null
-  var user: String = null
+  var master: String = _
+  var principal: String = _
+  var secret: String = _
+  var user: String = _
 
   var frameworkName: String = "kafka"
   var frameworkRole: String = "*"
@@ -46,11 +46,11 @@ object Config {
   var reconciliationAttempts = 6
   var reconciliationInterval = new Period((reconciliationTimeout.ms() * reconciliationAttempts) + "ms")
 
-  var jre: File = null
-  var log: File = null
-  var api: String = null
-  var bindAddress: BindAddress = null
-  var zk: String = null
+  var jre: File = _
+  var log: File = _
+  var api: String = _
+  var bindAddress: BindAddress = _
+  var zk: String = _
 
   def apiPort: Int = {
     val port = new URI(api).getPort

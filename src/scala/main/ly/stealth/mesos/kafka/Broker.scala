@@ -123,15 +123,15 @@ class Broker(val id: Int = 0) {
     var reservedVolumeSource: Source = null
 
     for (resource <- offer.getResourcesList) {
-      if (resource.getRole == "*") {
+      if (resource.getReservation.getRole == "*") {
         // shared resources
         if (resource.getName == "cpus") sharedCpus = resource.getScalar.getValue
         if (resource.getName == "mem") sharedMem = resource.getScalar.getValue.toLong
         if (resource.getName == "ports") sharedPorts.addAll(resource.getRanges.getRangeList.map(r => new Range(r.getBegin.toInt, r.getEnd.toInt)))
       } else {
-        if (role != null && role != resource.getRole)
-          throw new IllegalArgumentException(s"Offer contains 2 non-default roles: $role, ${resource.getRole}")
-        role = resource.getRole
+        if (role != null && role != resource.getReservation.getRole)
+          throw new IllegalArgumentException(s"Offer contains 2 non-default roles: $role, ${resource.getReservation.getRole}")
+        role = resource.getReservation.getRole
 
         // static role-reserved resources
         if (!resource.hasReservation) {
@@ -499,7 +499,7 @@ object Broker {
           .setName("cpus")
           .setType(Value.Type.SCALAR)
           .setScalar(Value.Scalar.newBuilder.setValue(value))
-          .setRole(role)
+          .setReservation(ReservationInfo.newBuilder().setRole(role))
           .build()
       }
 
@@ -508,7 +508,7 @@ object Broker {
           .setName("mem")
           .setType(Value.Type.SCALAR)
           .setScalar(Value.Scalar.newBuilder.setValue(value))
-          .setRole(role)
+          .setReservation(ReservationInfo.newBuilder().setRole(role))
           .build()
       }
 
@@ -517,7 +517,7 @@ object Broker {
           .setName("ports")
           .setType(Value.Type.RANGES)
           .setRanges(Value.Ranges.newBuilder.addRange(Value.Range.newBuilder().setBegin(value).setEnd(value)))
-          .setRole(role)
+          .setReservation(ReservationInfo.newBuilder().setRole(role))
           .build()
       }
 
@@ -539,7 +539,7 @@ object Broker {
           .setName("disk")
           .setType(Value.Type.SCALAR)
           .setScalar(Value.Scalar.newBuilder.setValue(value))
-          .setRole(role)
+          .setReservation(ReservationInfo.newBuilder().setRole(role))
           .setDisk(disk)
           .setReservation(reservation)
           .build()

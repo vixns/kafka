@@ -86,7 +86,7 @@ trait SchedulerComponentImpl extends SchedulerComponent with SchedulerDriverComp
 
   val scheduler: KafkaMesosScheduler = new KafkaMesosSchedulerImpl
   private[this] var _driver: SchedulerDriver = _
-  implicit def driver = _driver
+  implicit def driver: SchedulerDriver = _driver
 
   class KafkaMesosSchedulerImpl extends KafkaMesosScheduler {
     private val logger: Logger = Logger.getLogger("KafkaMesosScheduler")
@@ -286,7 +286,8 @@ object KafkaMesosScheduler {
     val frameworkBuilder = FrameworkInfo.newBuilder()
     frameworkBuilder.setUser(if (Config.user != null) Config.user else "")
     if (registry.cluster.frameworkId != null) frameworkBuilder.setId(FrameworkID.newBuilder().setValue(registry.cluster.frameworkId))
-    frameworkBuilder.setRole(Config.frameworkRole)
+    frameworkBuilder.addCapabilities(FrameworkInfo.Capability.newBuilder().setType(FrameworkInfo.Capability.Type.MULTI_ROLE))
+    frameworkBuilder.addRoles(Config.frameworkRole)
 
     frameworkBuilder.setName(Config.frameworkName)
     frameworkBuilder.setFailoverTimeout(Config.frameworkTimeout.ms / 1000)
@@ -308,7 +309,7 @@ object KafkaMesosScheduler {
         new MesosSchedulerDriver(registry.scheduler, frameworkBuilder.build, Config.master)
 
     Runtime.getRuntime.addShutdownHook(new Thread() {
-      override def run() = registry.httpServer.stop()
+      override def run(): Unit = registry.httpServer.stop()
     })
 
     val status = if (driver.run eq Status.DRIVER_STOPPED) 0 else 1

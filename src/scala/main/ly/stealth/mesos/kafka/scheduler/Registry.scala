@@ -65,5 +65,5 @@ class ProductionRegistry
     with QuotaApiComponentImpl
     with DefaultEventLoopComponent
 {
-  val cluster = Cluster.load()
+  val cluster: Cluster = Cluster.load()
 }

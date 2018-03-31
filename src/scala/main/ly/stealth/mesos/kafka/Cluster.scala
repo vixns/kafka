@@ -23,7 +23,6 @@ import java.util.Collections
 import java.io.{File, FileWriter}
 import ly.stealth.mesos.kafka.json.JsonUtil
 import ly.stealth.mesos.kafka.scheduler.{Quotas, Rebalancer, Topics, ZKStringSerializer}
-import ly.stealth.mesos.kafka.scheduler.mesos.KafkaMesosScheduler
 import org.I0Itec.zkclient.ZkClient
 import org.I0Itec.zkclient.exception.ZkNodeExistsException
 
@@ -33,7 +32,7 @@ class Cluster {
   private[kafka] var rebalancer: Rebalancer = new Rebalancer()
   private[kafka] var topics: Topics = new Topics()
   private[kafka] var quotas: Quotas = new Quotas()
-  private[kafka] var frameworkId: String = null
+  private[kafka] var frameworkId: String = _
 
   def getBrokers:util.List[Broker] = Collections.unmodifiableList(brokers)
 
@@ -58,12 +57,12 @@ class Cluster {
   def removeBroker(broker: Broker): Unit = brokers.remove(broker)
 
   def clear(): Unit = brokers.clear()
-  def save() = Cluster.storage.save(this)
+  def save(): Unit = Cluster.storage.save(this)
 }
 
 object Cluster {
   var storage: Storage = newStorage(Config.storage)
-  def load() = storage.load()
+  def load(): Cluster = storage.load()
 
   def newStorage(s: String): Storage = {
     if (s.startsWith("file:")) return new FsStorage(new File(s.substring("file:".length)))
@@ -134,7 +133,7 @@ object Cluster {
       }
       else {
         try { zkClient.createPersistent(path, json) }
-        catch { case e: ZkNodeExistsException => zkClient.writeData(path, json) }
+        catch { case _: ZkNodeExistsException => zkClient.writeData(path, json) }
       }
     }
   }

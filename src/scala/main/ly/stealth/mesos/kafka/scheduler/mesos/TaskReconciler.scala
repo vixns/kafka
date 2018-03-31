@@ -71,7 +71,7 @@ trait TaskReconcilerComponentImpl extends TaskReconcilerComponent {
     def isReconciling: Boolean =
       cluster.getBrokers.exists(b => b.task != null && b.task.reconciling)
 
-    private def scheduleRetry() = {
+    private def scheduleRetry(): Unit = {
       retryFuture.set(eventLoop.schedule(
         retryReconciliation _,
         Config.reconciliationTimeout.ms,
@@ -120,16 +120,10 @@ trait TaskReconcilerComponentImpl extends TaskReconcilerComponent {
     }
 
     def start(): Future[_] = {
-      eventLoop.submit(() =>
-        if (isReconciling) {
-          logger.warn("Reconcile already in progress, skipping.")
-        } else {
-          startImpl()
-        }
-      )
+      eventLoop.submit(() =>  startImpl())
     }
 
-    private def startImpl() = {
+    private def startImpl(): Unit = {
       retryFuture.set(null)
       _attempts = 1
       logger.info("Starting reconciliation")

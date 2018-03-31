@@ -48,7 +48,7 @@ abstract class LazyWrapper[I](fact: (String) => I) {
       instance = Some(getInstance())
       instance.get
   }
-  def reset() = instance = None
+  def reset(): Unit = instance = None
 }
 
 
