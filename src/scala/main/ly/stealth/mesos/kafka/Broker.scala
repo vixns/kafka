@@ -123,7 +123,7 @@ class Broker(val id: Int = 0) {
     var reservedVolumeSource: Source = null
 
     for (resource <- offer.getResourcesList) {
-      if (resource.getReservation.getRole == "*") {
+      if (resource.getReservationsList.isEmpty) {
         // shared resources
         if (resource.getName == "cpus") sharedCpus = resource.getScalar.getValue
         if (resource.getName == "mem") sharedMem = resource.getScalar.getValue.toLong
