@@ -129,9 +129,7 @@ class Broker(val id: Int = 0) {
         if (resource.getName == "mem") sharedMem = resource.getScalar.getValue.toLong
         if (resource.getName == "ports") sharedPorts.addAll(resource.getRanges.getRangeList.map(r => new Range(r.getBegin.toInt, r.getEnd.toInt)))
       } else {
-        if (role != null && role != resource.getReservation.getRole)
-          throw new IllegalArgumentException(s"Offer contains 2 non-default roles: $role, ${resource.getReservation.getRole}")
-        role = resource.getReservation.getRole
+        role = resource.getReservationsList.last.getRole
 
         // static role-reserved resources
         if (!resource.hasReservation) {
