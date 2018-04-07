@@ -286,8 +286,7 @@ object KafkaMesosScheduler {
     val frameworkBuilder = FrameworkInfo.newBuilder()
     frameworkBuilder.setUser(if (Config.user != null) Config.user else "")
     if (registry.cluster.frameworkId != null) frameworkBuilder.setId(FrameworkID.newBuilder().setValue(registry.cluster.frameworkId))
-    frameworkBuilder.addCapabilities(FrameworkInfo.Capability.newBuilder().setType(FrameworkInfo.Capability.Type.MULTI_ROLE))
-    frameworkBuilder.addRoles(Config.frameworkRole)
+    frameworkBuilder.setRole(Config.frameworkRole)
 
     frameworkBuilder.setName(Config.frameworkName)
     frameworkBuilder.setFailoverTimeout(Config.frameworkTimeout.ms / 1000)
